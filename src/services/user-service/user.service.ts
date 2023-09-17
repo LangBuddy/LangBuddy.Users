@@ -1,80 +1,76 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../../database/entities/user.entity';
-import { IsNull, Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
 import { UserCreateRequest } from '../../models/request/user.create.request';
 import { UserUpdateRequest } from '../../models/request/user.update.request';
 import { UserResponse } from 'src/models/response/user.response';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { GetUserByIdQuery } from 'src/models/queries/get.user.by.id.query';
+import { GetUsersQuery } from 'src/models/queries/get.users.query';
+import { CreateUserCommand } from 'src/models/commands/create.user.command';
+import { UpdateUserCommand } from 'src/models/commands/update.user.command';
+import { DeleteUserCommand } from 'src/models/commands/delete.user.command';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   async create(userCreateRequest: UserCreateRequest) {
-    const user = this.userRepository.create(userCreateRequest);
-    user.setCreateDate();
-    return await this.userRepository.save(user);
+    const command = new CreateUserCommand(
+      userCreateRequest.firstName,
+      userCreateRequest.lastName,
+      userCreateRequest.birthday,
+      userCreateRequest.gender,
+    );
+    const result = await this.commandBus.execute(command);
+    return result;
   }
 
   async findOne(id: number) {
-    const user = await this.userRepository.findOne({
-      where: {
-        id,
-        deleteDate: IsNull(),
-      },
-    });
+    const query = new GetUserByIdQuery(id);
+    const user = await this.queryBus.execute(query);
 
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
+    const userResponse: UserResponse = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      birthday: user.birthday,
+      gender: user.gender,
+    };
 
-    return user;
+    return userResponse;
   }
 
   async findAll() {
-    const users = (
-      await this.userRepository.find({
-        where: {
-          deleteDate: IsNull(),
-        },
-      })
-    ).map((el) => {
-      const userResponse: UserResponse = {
+    const users = await this.queryBus.execute(new GetUsersQuery());
+
+    const usersResponse: UserResponse[] = users.map((el) => {
+      return {
         firstName: el.firstName,
         lastName: el.lastName,
         birthday: el.birthday,
         gender: el.gender,
-      };
-      return userResponse;
+      } as UserResponse;
     });
 
-    return users;
+    return usersResponse;
   }
 
   async update(id: number, userUpdateRequest: UserUpdateRequest) {
-    const user = await this.findOne(id);
-    user.setUpdateDate();
+    const command = new UpdateUserCommand(
+      id,
+      userUpdateRequest.firstName,
+      userUpdateRequest.lastName,
+      userUpdateRequest.birthday,
+      userUpdateRequest.gender,
+    );
 
-    await this.userRepository.update(id, {
-      firstName: userUpdateRequest.firstName || user.firstName,
-      lastName: userUpdateRequest.lastName || user.lastName,
-      birthday: userUpdateRequest.birthday || user.birthday,
-      gender: userUpdateRequest.gender || user.gender,
-      updateDate: user.updateDate,
-    });
-
-    return `This action updates a #${id} user`;
+    const result = await this.commandBus.execute(command);
+    return result;
   }
 
   async delete(id: number) {
-    const user = await this.findOne(id);
-    user.setDeleteDate();
-
-    await this.userRepository.update(id, user);
-
-    return `This action removes a #${id} user`;
+    const result = await this.commandBus.execute(new DeleteUserCommand(id));
+    return result;
   }
 }

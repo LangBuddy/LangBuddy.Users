@@ -8,6 +8,8 @@ import {
   Patch,
   Post,
   Res,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { UserCreateRequest } from 'src/models/request/user.create.request';
@@ -56,6 +58,7 @@ export class UserController {
   }
 
   @Post()
+  @UsePipes(new ValidationPipe({ transform: true }))
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -72,6 +75,7 @@ export class UserController {
   }
 
   @Patch(':id')
+  @UsePipes(new ValidationPipe({ transform: true }))
   @ApiOperation({ summary: 'Update a user by ID' })
   @ApiParam({ name: 'id', required: true, description: 'User identifier' })
   @ApiResponse({

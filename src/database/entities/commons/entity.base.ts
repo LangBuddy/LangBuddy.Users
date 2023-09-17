@@ -8,21 +8,25 @@ export class EntityBase {
   @Column()
   createDate: Date;
 
-  @Column()
-  updateDate: Date;
+  @Column({
+    nullable: true,
+  })
+  updateDate?: Date;
 
-  @Column()
-  deleteDate: Date;
+  @Column({
+    nullable: true,
+  })
+  deleteDate?: Date;
 
   setCreateDate() {
     this.createDate = new Date();
   }
 
   setUpdateDate() {
-    this.createDate = new Date();
+    this.updateDate = new Date();
   }
 
   setDeleteDate() {
-    this.createDate = new Date();
+    this.deleteDate = new Date();
   }
 }

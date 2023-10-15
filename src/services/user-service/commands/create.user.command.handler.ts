@@ -13,10 +13,10 @@ export class CreateUserCommandHandler
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async execute(userCreateRequest: CreateUserCommand): Promise<string> {
+  async execute(userCreateRequest: CreateUserCommand): Promise<number> {
     const user = this.userRepository.create(userCreateRequest);
     user.setCreateDate();
     await this.userRepository.save(user);
-    return 'User was successfully created';
+    return user.id;
   }
 }

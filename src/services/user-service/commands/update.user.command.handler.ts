@@ -15,7 +15,7 @@ export class UpdateUserCommandHandler
     private readonly queryBus: QueryBus,
   ) {}
 
-  async execute(command: UpdateUserCommand): Promise<string> {
+  async execute(command: UpdateUserCommand): Promise<number> {
     const user = await this.queryBus.execute(new GetUserByIdQuery(command.id));
     user.setUpdateDate();
 
@@ -27,6 +27,6 @@ export class UpdateUserCommandHandler
       updateDate: user.updateDate,
     });
 
-    return `This action updates a #${command.id} user`;
+    return user.id;
   }
 }

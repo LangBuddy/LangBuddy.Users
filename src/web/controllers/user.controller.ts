@@ -12,9 +12,9 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { UserCreateRequest } from 'src/models/request/user.create.request';
-import { UserUpdateRequest } from 'src/models/request/user.update.request';
-import { UserResponse } from 'src/models/response/user.response';
+import { UserCreateRequest } from 'src/models/requests/user.create.request';
+import { UserUpdateRequest } from 'src/models/requests/user.update.request';
+import { UserResponse } from 'src/models/responses/user.response';
 import { UserService } from 'src/services/user-service/user.service';
 
 @ApiTags('Users')
